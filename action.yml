@@ -115,17 +115,22 @@ runs:
                       echo $body
 
                       echo "issue_list"
-                      echo $issue_list
+                      echo ${issue_list[@]}
 
                       for i in "${issue_list[@]}"
                         do
                             issue_number=$(echo $i | cut -f2 -d#)
                             repo=$(echo $i | cut -f1 -d#)
-
+                            
                             if [ -z "$repo" ]; then
                               repo=$repo_name
+                            else
+                              curl -X POST  -H "Accept: application/vnd.github.v3+json" -H"authorization: Bearer ${{ env.GITHUB_TOKEN }}" https://api.github.com/repos/$repo/labels -d '{"name": "'"$tag_name"'" ,"color": "'"$color"'"}'
                             fi
-
+                            
+                            echo $issue_number
+                            echo $repo
+                            
                             curl -X POST  -H "Accept: application/vnd.github.v3+json" -H"authorization: Bearer ${{ env.GITHUB_TOKEN }}"  https://api.github.com/repos/$repo/issues/$issue_number/labels -d '["'"$tag_name"'"]'
 
                             echo "Label $tag_name to issue $repo/$issue added"
