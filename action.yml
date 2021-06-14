@@ -73,6 +73,22 @@ runs:
           echo ::set-output name=prerelease::$prerelease
           echo ::set-output name=tag_id::$tag_name
           
+      - name: create tag
+        id: creatre tag
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUBPAT }}
+        run: |
+       
+                if [[ "${{ steps.tagging.outputs.prerelease }}" == "true" ]] ; then
+
+                    gh release create  ${{ steps.tagging.outputs.tag_id }} --prerelease 
+
+                else
+                    git tag -a ${{ steps.tagging.outputs.tag_id }} -m  " new tag ${{ steps.tagging.outputs.tag_id }} created"
+                    git push --tags origin master
+                fi
+          
 
 branding:
   icon: "book-open"
