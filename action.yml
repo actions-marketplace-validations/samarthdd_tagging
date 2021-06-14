@@ -119,8 +119,7 @@ runs:
 
                       for i in "${issue_list[@]}"
                         do
-                            issue_number=$(echo $i | cut -f2 -d#)
-                            issue_number=${issue_number%$'\n'}
+                            issue_number=$(echo $i | cut -f2 -d# | tr '\n' ' ')
                             repo=$(echo $i | cut -f1 -d#)
                             
                             if [ -z "$repo" ]; then
