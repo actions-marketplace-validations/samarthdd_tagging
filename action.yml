@@ -74,7 +74,7 @@ runs:
           echo ::set-output name=tag_id::$tag_name
           
       - name: create tag
-        id: creatre tag
+        id: create_tag
         shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUBPAT }}
@@ -89,7 +89,7 @@ runs:
                     git push --tags origin master
                 fi
       - name : tag PR and issue on merge   
-        id: tag PR and Issue
+        id: tag_PR_and_Issue
         shell: bash
         env:
            GITHUB_TOKEN: ${{ secrets.GITHUBPAT }}
