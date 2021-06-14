@@ -120,7 +120,7 @@ runs:
                       for i in "${issue_list[@]}"
                         do
                             issue_number=$(echo $i | cut -f2 -d# | tr '\n' ' ')
-                            issue_number=$(echo $issue_number)
+                            issue_number=$(echo "${issue_number//[[:space:]]/})
                             repo=$(echo $i | cut -f1 -d#)
                             
                             if [ -z "$repo" ]; then
@@ -130,9 +130,10 @@ runs:
                             fi
                             
                             echo $issue_number$repo
-                            echo $repo
+                            echo $(echo $issue_number)$repo
+                            echo "${issue_number//[[:space:]]/}"$repo
                             
-                            url="https://api.github.com/repos/$repo/issues/$issue_number/labels"
+                            url="https://api.github.com/repos/$repo/issues/$(echo $issue_number)/labels"
                             echo $url
                             
                             curl -X POST  -H "Accept: application/vnd.github.v3+json" -H"authorization: Bearer ${{ env.GITHUB_TOKEN }}"  https://api.github.com/repos/$repo/issues/$issue_number/labels -d '["'"$tag_name"'"]'
