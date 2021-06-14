@@ -93,6 +93,8 @@ runs:
                     git tag -a ${{ steps.tagging.outputs.tag_id }} -m  " new tag ${{ steps.tagging.outputs.tag_id }} created"
                     git push --tags origin master
                 fi
+        env:
+          GITHUB_TOKEN: $GITHUBPAT
       - name : tag PR and issue on merge   
         id: tag_PR_and_Issue
         shell: bash
