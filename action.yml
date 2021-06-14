@@ -88,7 +88,34 @@ runs:
                     git tag -a ${{ steps.tagging.outputs.tag_id }} -m  " new tag ${{ steps.tagging.outputs.tag_id }} created"
                     git push --tags origin master
                 fi
-          
+      - name : tag PR and issue on merge   
+        id: tag PR and Issue
+        shell: bash
+        env:
+           GITHUB_TOKEN: ${{ secrets.GITHUBPAT }}
+        run: |
+                if [[ "${{ github.event.pull_request.merged }}" == "true" ]] ; then
+                        tag_name=${{ steps.tagging.outputs.tag_id }}
+                        echo $tag_name
+                        color="D2C3F9"
+                        echo $color
+                        pull_number=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
+                        echo $pull_number
+                        repo_name=${{ steps.tagging.outputs.repo_name }}
+                        curl -X POST  -H "Accept: application/vnd.github.v3+json" -H"authorization: Bearer ${{ secrets.GITHUBPAT }}" https://api.github.com/repos/$repo_name/labels -d '{"name": "'"$tag_name"'" ,"color": "'"$color"'"}'
+                        gh pr edit $pull_number  --add-label $tag_name
+                        echo "added label to PR"
+                        myarr=($(echo $body | awk '{if(/Changes/) print $2}'))
+                        body=$(curl -sL https://api.github.com/repos/$repo/pulls/$pull_number |  jq -r ".body")
+                        issue_list=($(echo $body | awk '{if(/Changes/) print $2}'))
+                        for i in "${issue_list[@]}"
+                        do
+                            repo=$(echo $i | cut -f1 -d#)
+                            issue_number=$(echo $i | cut -f2 -d#)
+                            curl -X POST  -H "Accept: application/vnd.github.v3+json" -H"authorization: Bearer ${{ secrets.GITHUBPAT }}"  https://api.github.com/repos/$repo/issues/$issue_number/labels -d '["'"$tag_name"'"]'
+                        done
+                    fi
+
 
 branding:
   icon: "book-open"
