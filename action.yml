@@ -99,8 +99,14 @@ runs:
                       color="D2C3F9"
                       pull_number=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
                       body=$(curl -sL https://api.github.com/repos/$repo_name/pulls/$pull_number |  jq -r ".body")
-                      issue_list=($(echo $body | awk '{if(/Changes/) print $2}'))
-
+                      
+                      j=0
+                      for val in $(echo $body | awk '{for (i=1;i<NF;i++) if ($i == "Changes") print $(i+1)}')
+                          do  
+                              issue_list[$j]=$val 
+                              ((j=j+1))
+                          done
+                          
                       curl -X POST  -H "Accept: application/vnd.github.v3+json" -H"authorization: Bearer ${{ env.GITHUB_TOKEN }}" https://api.github.com/repos/$repo_name/labels -d '{"name": "'"$tag_name"'" ,"color": "'"$color"'"}'
                       gh pr edit $pull_number  --add-label $tag_name
                       echo "Added $tag_name label to PR $pull_number"
