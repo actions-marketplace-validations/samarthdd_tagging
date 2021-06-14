@@ -1,4 +1,4 @@
-name: "Auto Tagging and Release"
+name: "Auto Tagging and Release and labelling"
 description: "Creates auto tag and release"
 
 inputs:
