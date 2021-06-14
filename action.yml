@@ -83,9 +83,13 @@ runs:
       - name: create tag
         id: create_tag
         shell: bash
+        env:
+          GITHUB_TOKEN: $GITHUBPAT
         run: |
-       
+                echo ${{ env.GITHUB_TOKEN }}
+                echo "token"
                 if [[ "${{ steps.tagging.outputs.prerelease }}" == "true" ]] ; then
+                    gh auth login < $GITHUBPAT
 
                     gh release create  ${{ steps.tagging.outputs.tag_id }} --prerelease 
 
@@ -93,8 +97,7 @@ runs:
                     git tag -a ${{ steps.tagging.outputs.tag_id }} -m  " new tag ${{ steps.tagging.outputs.tag_id }} created"
                     git push --tags origin master
                 fi
-        env:
-          GITHUB_TOKEN: $GITHUBPAT
+
       - name : tag PR and issue on merge   
         id: tag_PR_and_Issue
         shell: bash
