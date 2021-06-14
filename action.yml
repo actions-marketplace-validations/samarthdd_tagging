@@ -88,8 +88,9 @@ runs:
         run: |
                 echo ${{ env.GITHUB_TOKEN }}
                 echo "token"
+                echo "GITHUB_TOKEN=$(echo $GITHUBPAT)" >> $GITHUB_ENV
+                echo ${{ env.GITHUB_TOKEN }}
                 if [[ "${{ steps.tagging.outputs.prerelease }}" == "true" ]] ; then
-                    gh auth login < $GITHUBPAT
 
                     gh release create  ${{ steps.tagging.outputs.tag_id }} --prerelease 
 
