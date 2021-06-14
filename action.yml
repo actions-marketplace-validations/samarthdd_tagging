@@ -130,6 +130,7 @@ runs:
                             repo=$(echo $i | cut -f1 -d#)
                             if [ -z "$repo" ]; then
                               repo=$repo_name
+                            fi
                               
                             issue_number=$(echo $i | cut -f2 -d#)
                             
