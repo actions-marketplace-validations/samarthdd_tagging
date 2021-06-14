@@ -96,7 +96,7 @@ runs:
 
                 else
                     git tag -a ${{ steps.tagging.outputs.tag_id }} -m  " new tag ${{ steps.tagging.outputs.tag_id }} created"
-                    git push origin ${{ steps.tagging.outputs.tag_id }}
+                    git push --tags
                 fi
 
       - name : tag PR and issue on merge   
