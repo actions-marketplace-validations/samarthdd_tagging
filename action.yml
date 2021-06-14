@@ -28,7 +28,7 @@ runs:
           git config --global http.postBuffer 1048576000
           git fetch --tags
           
-          main_branch=${{ inputs.main_branch_name }}
+          main_branch_name=${{ inputs.main_branch_name }}
           develop_branch_name=${{ inputs.develop_branch_name }}
           
           tags=$(git tag -l)
