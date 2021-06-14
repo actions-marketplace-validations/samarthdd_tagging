@@ -47,7 +47,12 @@ runs:
           branch=${{ steps.extract_branch.outputs.branch }}
           prerelease=false
           
+          echo $main_branch_name
+          echo $develop_branch_name
+          echo $branch
+          
           if [[ $branch == $main_branch_name &&  "${{ github.event.inputs.create_new_tag }}" == "true" ]] ; then
+            echo "main 1"
             version=${version#"v"}
             version=`expr $version + 1`
             major=0
@@ -55,11 +60,13 @@ runs:
             version=v${version}
             echo $version
           elif [ $branch == $main_branch_name ]; then
+            echo "main 2"
             prerelease=true
             minor=0
             major=`expr $major + 1`
             
           elif [ $branch == $develop_branch_name ]; then
+              echo "develop nn"
               prerelease=true
               echo $branch
               if [ -z "$minor" ]; then
