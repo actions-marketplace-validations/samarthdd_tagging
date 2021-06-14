@@ -117,14 +117,22 @@ runs:
                         curl -X POST  -H "Accept: application/vnd.github.v3+json" -H"authorization: Bearer ${{ env.GITHUB_TOKEN }}" https://api.github.com/repos/$repo_name/labels -d '{"name": "'"$tag_name"'" ,"color": "'"$color"'"}'
                         gh pr edit $pull_number  --add-label $tag_name
                         echo "added label to PR"
-                        myarr=($(echo $body | awk '{if(/Changes/) print $2}'))
                         body=$(curl -sL https://api.github.com/repos/$repo/pulls/$pull_number |  jq -r ".body")
+                        myarr=($(echo $body | awk '{if(/Changes/) print $2}'))
+                        echo "body"
+                        echo $body
+                        
                         issue_list=($(echo $body | awk '{if(/Changes/) print $2}'))
+                        echo "issue_list"
+                        echo $issue_list
                         for i in "${issue_list[@]}"
                         do
                             repo=$(echo $i | cut -f1 -d#)
                             issue_number=$(echo $i | cut -f2 -d#)
+                            echo $repo
+                            echo $issue_number
                             curl -X POST  -H "Accept: application/vnd.github.v3+json" -H"authorization: Bearer ${{ env.GITHUB_TOKEN }}"  https://api.github.com/repos/$repo/issues/$issue_number/labels -d '["'"$tag_name"'"]'
+                            echo "Label to issue added
                         done
                     fi
 
