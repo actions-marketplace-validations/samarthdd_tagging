@@ -120,7 +120,7 @@ runs:
                       for i in "${issue_list[@]}"
                         do
                             issue_number=$(echo $i | cut -f2 -d# | tr '\n' ' ')
-                            issue_number=$(echo "${issue_number//[[:space:]]/})
+                            issue_number=$(echo "${issue_number//[[:space:]]/}")
                             repo=$(echo $i | cut -f1 -d#)
                             
                             if [ -z "$repo" ]; then
