@@ -19,7 +19,8 @@ runs:
         shell: bash
         run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
         id: extract_branch
-      - name: Form tag name
+        
+      - name: Form new release/tag name
         id: tagging
         shell: bash
         run: |
@@ -41,41 +42,31 @@ runs:
           fi
           
           echo "previous latest tag : $latest_tag"
+          
           version=`echo $latest_tag| cut -d. -f1`
           major=`echo $latest_tag | cut -d. -f2`
           minor=`echo $latest_tag | cut -d. -f3`
+          
           branch=${{ steps.extract_branch.outputs.branch }}
           prerelease=false
           
-          echo $main_branch_name
-          echo $develop_branch_name
-          echo $branch
-          
-          if [[ $branch == $main_branch_name &&  "${{ github.event.inputs.create_new_tag }}" == "true" ]] ; then
-            echo "main 1"
-            version=${version#"v"}
-            version=`expr $version + 1`
-            major=0
-            minor=0
-            version=v${version}
-            echo $version
-          elif [ $branch == $main_branch_name ]; then
-            echo "main 2"
-            prerelease=true
-            minor=0
-            major=`expr $major + 1`
+          if [ $branch == $main_branch_name ]; then
+              prerelease=true
+              minor=0
+              major=`expr $major + 1`
             
           elif [ $branch == $develop_branch_name ]; then
-              echo "develop nn"
-              echo $branch
               if [ -z "$minor" ]; then
                  minor=1
               else
                   minor=`expr $minor + 1`
               fi
           fi
+          
           tag_name=$version.$major.$minor
+          
           echo "new tag is : $tag_name"
+          
           echo ::set-output name=prerelease::$prerelease
           echo ::set-output name=tag_id::$tag_name
           echo ::set-output name=repo_name::$repo_name
@@ -86,59 +77,55 @@ runs:
         env:
           GITHUB_TOKEN: ${{ inputs.GITHUBPAT }}
         run: |
-                echo ${{ env.GITHUB_TOKEN }}
-                echo "token"
-                echo ${{ env.GITHUB_TOKEN }}
+              if [[ "${{ steps.tagging.outputs.prerelease }}" == "true" ]] ; then
 
-                if [[ "${{ steps.tagging.outputs.prerelease }}" == "true" ]] ; then
+                  gh release create  ${{ steps.tagging.outputs.tag_id }} --prerelease 
 
-                    gh release create  ${{ steps.tagging.outputs.tag_id }} --prerelease 
+              else
+                  git tag -a ${{ steps.tagging.outputs.tag_id }} -m  " new tag ${{ steps.tagging.outputs.tag_id }} created"
+                  git push --tags
+              fi
 
-                else
-                    git tag -a ${{ steps.tagging.outputs.tag_id }} -m  " new tag ${{ steps.tagging.outputs.tag_id }} created"
-                    git push --tags
-                fi
-
-      - name : tag PR and issue on merge   
+      - name : Add label to PR and Issues on merge   
         id: tag_PR_and_Issue
         shell: bash
         env:
           GITHUB_TOKEN: ${{ inputs.GITHUBPAT }}
         run: |
                 if [[ "${{ github.event.pull_request.merged }}" == "true" ]] ; then
-                        tag_name=${{ steps.tagging.outputs.tag_id }}
-                        echo $tag_name
-                        color="D2C3F9"
-                        echo $color
-                        pull_number=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
-                        echo $pull_number
-                        repo_name=${{ steps.tagging.outputs.repo_name }}
-                        curl -X POST  -H "Accept: application/vnd.github.v3+json" -H"authorization: Bearer ${{ env.GITHUB_TOKEN }}" https://api.github.com/repos/$repo_name/labels -d '{"name": "'"$tag_name"'" ,"color": "'"$color"'"}'
-                        gh pr edit $pull_number  --add-label $tag_name
-                        echo "added label to PR"
-                        body=$(curl -sL https://api.github.com/repos/$repo_name/pulls/$pull_number |  jq -r ".body")
-                        myarr=($(echo $body | awk '{if(/Changes/) print $2}'))
-                        echo "body"
-                        echo $body
-                        
-                        issue_list=($(echo $body | awk '{if(/Changes/) print $2}'))
-                        echo "issue_list"
-                        echo $issue_list
-                        for i in "${issue_list[@]}"
+                
+                      repo_name=${{ steps.tagging.outputs.repo_name }}
+                      tag_name=${{ steps.tagging.outputs.tag_id }}
+                      color="D2C3F9"
+                      pull_number=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
+                      body=$(curl -sL https://api.github.com/repos/$repo_name/pulls/$pull_number |  jq -r ".body")
+                      issue_list=($(echo $body | awk '{if(/Changes/) print $2}'))
+
+                      curl -X POST  -H "Accept: application/vnd.github.v3+json" -H"authorization: Bearer ${{ env.GITHUB_TOKEN }}" https://api.github.com/repos/$repo_name/labels -d '{"name": "'"$tag_name"'" ,"color": "'"$color"'"}'
+                      gh pr edit $pull_number  --add-label $tag_name
+                      echo "Added $tag_name label to PR $pull_number"
+
+                      echo "body"
+                      echo $body
+
+                      echo "issue_list"
+                      echo $issue_list
+
+                      for i in "${issue_list[@]}"
                         do
+                            issue_number=$(echo $i | cut -f2 -d#)
                             repo=$(echo $i | cut -f1 -d#)
+
                             if [ -z "$repo" ]; then
                               repo=$repo_name
                             fi
-                              
-                            issue_number=$(echo $i | cut -f2 -d#)
-                            
-                            echo $repo
-                            echo $issue_number
+
                             curl -X POST  -H "Accept: application/vnd.github.v3+json" -H"authorization: Bearer ${{ env.GITHUB_TOKEN }}"  https://api.github.com/repos/$repo/issues/$issue_number/labels -d '["'"$tag_name"'"]'
-                            echo "Label to issue added"
+
+                            echo "Label $tag_name to issue $repo/$issue added"
+
                         done
-                    fi
+                fi
 
 
 branding:
