@@ -67,7 +67,6 @@ runs:
             
           elif [ $branch == $develop_branch_name ]; then
               echo "develop nn"
-              prerelease=true
               echo $branch
               if [ -z "$minor" ]; then
                  minor=1
