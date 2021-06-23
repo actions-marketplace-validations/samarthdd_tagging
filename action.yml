@@ -1,5 +1,5 @@
-name: "Auto Tagging and Release and labelling"
-description: "Creates auto tag and release"
+name: "Auto Tagging and Release and auto labelling 1"
+description: "Creates auto tag and release on PR merge and add label to PR and issues"
 
 inputs:
   main_branch_name:
@@ -20,11 +20,9 @@ runs:
         run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
         id: extract_branch
         
-      - name: Form new release/tag name
+      - name: Form new tag/release name
         id: tagging
         shell: bash
-        env:
-          GITHUB_TOKEN: ${{ inputs.GITHUBPAT }}
         run: |
           git config user.name github-actions@github.com
           git config user.email github-actions
@@ -40,11 +38,7 @@ runs:
             latest_tag="v0.0.0"
           else
             repo_name=$(git config --get remote.origin.url | sed 's/.*\/\([^ ]*\/[^.]*\).*/\1/')
-            latest_tag=$(curl -sL -H "Accept: application/vnd.github.v3+json" -H"authorization: Bearer ${{ env.GITHUB_TOKEN }}" https://api.github.com/repos/$repo_name/tags | jq -r ".[0].name")
             latest_tag=$(git describe --tags `git rev-list --tags --max-count=1`)
-            echo "first one $latest_tag"
-            latest_tag=$(git tag --contains `git rev-list --tags --max-count=1` | tail -n 1 )
-            echo "second one $latest_tag"
           fi
           
           echo "previous latest tag : $latest_tag"
@@ -88,12 +82,12 @@ runs:
                   gh release create  ${{ steps.tagging.outputs.tag_id }} --prerelease 
 
               else
-                  git tag -a ${{ steps.tagging.outputs.tag_id }} -m  " new tag ${{ steps.tagging.outputs.tag_id }} created"
+                  git tag -a ${{ steps.tagging.outputs.tag_id }} -m  "New tag ${{ steps.tagging.outputs.tag_id }} is created"
                   git push --tags
               fi
 
-      - name : Add label to PR and Issues on merge   
-        id: tag_PR_and_Issue
+      - name : Add label to PR and linked Issues on merge   
+        id: label_PR_and_Issues
         shell: bash
         env:
           GITHUB_TOKEN: ${{ inputs.GITHUBPAT }}
@@ -104,7 +98,7 @@ runs:
                       tag_name=${{ steps.tagging.outputs.tag_id }}
                       color="D2C3F9"
                       pull_number=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
-                      body=$(curl -sL -H "Accept: application/vnd.github.v3+json" -H"authorization: Bearer ${{ env.GITHUB_TOKEN }}" https://api.github.com/repos/$repo_name/pulls/$pull_number |  jq -r ".body")
+                      body=$(curl -sL https://api.github.com/repos/$repo_name/pulls/$pull_number |  jq -r ".body")
                       
                       j=0
                       for val in $(echo $body | awk '{for (i=1;i<NF;i++) if ($i == "Changes") print $(i+1)}')
@@ -142,7 +136,6 @@ runs:
 
                         done
                 fi
-
 
 branding:
   icon: "book-open"
