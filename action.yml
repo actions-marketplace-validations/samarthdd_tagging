@@ -1,4 +1,4 @@
-name: "Auto Tagging and Release and auto labelling"
+name: "Auto Tagging and Release and auto labelling 1"
 description: "Creates auto tag and release on PR merge and add label to PR and issues"
 
 inputs:
