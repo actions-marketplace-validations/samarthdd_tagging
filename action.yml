@@ -42,6 +42,7 @@ runs:
             repo_name=$(git config --get remote.origin.url | sed 's/.*\/\([^ ]*\/[^.]*\).*/\1/')
             latest_tag=$(curl -sL -H "Accept: application/vnd.github.v3+json" -H"authorization: Bearer ${{ env.GITHUB_TOKEN }}" https://api.github.com/repos/$repo_name/tags | jq -r ".[0].name")
             latest_tag=$(git describe --tags `git rev-list --tags --max-count=1`)
+            latest_tag=$(git tag --contains `git rev-list --tags --max-count=1` | sort -R  | tail -1)
           fi
           
           echo "previous latest tag : $latest_tag"
