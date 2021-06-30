@@ -41,6 +41,8 @@ runs:
             latest_tag=$(git tag --contains `git rev-list --tags --max-count=1` | tail -n 1 )
           fi
           
+          echo $branch
+          
           echo "previous latest tag : $latest_tag"
           
           version=`echo $latest_tag| cut -d. -f1`
@@ -48,14 +50,25 @@ runs:
           minor=`echo $latest_tag | cut -d. -f3`
           
           branch=${{ steps.extract_branch.outputs.branch }}
+          
+
+          
           prerelease=false
           
           if [ $branch == $main_branch_name ]; then
+              git checkout $branch
+              git reset --hard HEAD
+              git pull
+              
               prerelease=true
               minor=0
               major=`expr $major + 1`
             
           elif [ $branch == $develop_branch_name ]; then
+               git checkout $branch
+               git reset --hard HEAD
+               git pull
+               
               if [ -z "$minor" ]; then
                  minor=1
               else
