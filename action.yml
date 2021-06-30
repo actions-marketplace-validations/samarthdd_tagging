@@ -61,18 +61,13 @@ runs:
           prerelease=false
           
           if [ $branch == $main_branch_name ]; then
-              git checkout $branch
-              git reset --hard HEAD
-              git pull
-              
+
               prerelease=true
               minor=0
               major=`expr $major + 1`
             
           elif [ $branch == $develop_branch_name ]; then
-               git checkout $branch
-               git reset --hard HEAD
-               git pull
+
                
               if [ -z "$minor" ]; then
                  minor=1
@@ -97,7 +92,7 @@ runs:
         run: |
               if [[ "${{ steps.tagging.outputs.prerelease }}" == "true" ]] ; then
 
-                  gh release create  ${{ steps.tagging.outputs.tag_id }} --prerelease 
+                  gh release create  ${{ steps.tagging.outputs.tag_id }} --target $branch --prerelease 
 
               else
                   git tag -a ${{ steps.tagging.outputs.tag_id }} -m  "New tag ${{ steps.tagging.outputs.tag_id }} is created"
