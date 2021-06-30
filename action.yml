@@ -29,6 +29,10 @@ runs:
           git config --global http.postBuffer 1048576000
           git fetch --tags
           
+          echo "current branch"
+          git branch
+          
+          
           main_branch_name=${{ inputs.main_branch_name }}
           develop_branch_name=${{ inputs.develop_branch_name }}
           
@@ -41,7 +45,7 @@ runs:
             latest_tag=$(git tag --contains `git rev-list --tags --max-count=1` | tail -n 1 )
           fi
           
-          echo $branch
+          
           
           echo "previous latest tag : $latest_tag"
           
@@ -52,7 +56,8 @@ runs:
           branch=${{ steps.extract_branch.outputs.branch }}
           
 
-          
+          echo "branch : $branch"
+     
           prerelease=false
           
           if [ $branch == $main_branch_name ]; then
